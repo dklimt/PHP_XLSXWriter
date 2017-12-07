@@ -192,7 +192,7 @@ class XLSXWriter
 			self::log( "Warning! passing $suppress_row=false|true to writeSheetHeader() is deprecated, this will be removed in a future version." );
 			$suppress_row = intval($col_options);
 		}
-    $style = &$col_options;
+		$style = &$col_options;
 
 		$col_widths = isset($col_options['widths']) ? (array)$col_options['widths'] : array();
 		self::initializeSheet($sheet_name, $col_widths);
@@ -200,9 +200,17 @@ class XLSXWriter
 		$sheet->columns = $this->initializeColumnTypes($header_types);
 		if (!$suppress_row)
 		{
-			$header_row = array_keys($header_types);      
+			$header_row = array_keys($header_types);
 
-			$sheet->file_writer->write('<row collapsed="false" customFormat="false" customHeight="false" hidden="false" ht="12.1" outlineLevel="0" r="' . (1) . '">');
+			if (!empty($col_options))
+			{
+				$ht = isset($col_options['height']) ? floatval($col_options['height']) : 12.1;
+				$customHt = isset($col_options['height']) ? true : false;
+				$sheet->file_writer->write('<row collapsed="false" customFormat="false" customHeight="'.($customHt).'" hidden="false" ht="'.($ht).'" outlineLevel="0" r="' . (1) . '">');
+			} else {
+				$sheet->file_writer->write('<row collapsed="false" customFormat="false" customHeight="false" hidden="false" ht="12.1" outlineLevel="0" r="' . (1) . '">');
+			}
+
 			foreach ($header_row as $c => $v) {
 				$cell_style_idx = empty($style) ? $sheet->columns[$c]['default_cell_style'] : $this->addCellStyle( 'GENERAL', json_encode(isset($style[0]) ? $style[$c] : $style) );
 				$this->writeCell($sheet->file_writer, 0, $c, $v, $number_format_type='n_string', $cell_style_idx);
@@ -224,7 +232,7 @@ class XLSXWriter
 			$default_column_types = $this->initializeColumnTypes( array_fill($from=0, $until=count($row), 'GENERAL') );//will map to n_auto
 			$sheet->columns = array_merge((array)$sheet->columns, $default_column_types);
 		}
-		
+
 		if (!empty($row_options))
 		{
 			$ht = isset($row_options['height']) ? floatval($row_options['height']) : 12.1;
@@ -486,10 +494,10 @@ class XLSXWriter
 			if (!empty($border)) { //fonts have an empty placeholder in the array to offset the static xml entry above
 				$pieces = explode(",", $border);
 				$file->write('<border diagonalDown="false" diagonalUp="false">');
-				$file->write(  '<left'.(in_array('left',$pieces) ? ' style="hair"' : '').'/>');
-				$file->write(  '<right'.(in_array('right',$pieces) ? ' style="hair"' : '').'/>');
-				$file->write(  '<top'.(in_array('top',$pieces) ? ' style="hair"' : '').'/>');
-				$file->write(  '<bottom'.(in_array('bottom',$pieces) ? ' style="hair"' : '').'/>');
+				$file->write(  '<left'.(in_array('left',$pieces) ? ' style="thin"' : '').'/>');
+				$file->write(  '<right'.(in_array('right',$pieces) ? ' style="thin"' : '').'/>');
+				$file->write(  '<top'.(in_array('top',$pieces) ? ' style="thin"' : '').'/>');
+				$file->write(  '<bottom'.(in_array('bottom',$pieces) ? ' style="thin"' : '').'/>');
 				$file->write(  '<diagonal/>');
 				$file->write('</border>');
 			}
@@ -674,7 +682,7 @@ class XLSXWriter
 		return str_replace($all_invalids, "", $filename);
 	}
 	//------------------------------------------------------------------
-	public static function sanitize_sheetname($sheetname) 
+	public static function sanitize_sheetname($sheetname)
 	{
 		static $badchars  = '\\/?*:[]';
 		static $goodchars = '        ';
